@@ -60,13 +60,24 @@ Hard rules (must be followed exactly):
 11. Do NOT include any publish/send tool calls. All outreach or scheduling must be drafts with requires_approval=true.
 12. Use Asia/Kolkata timezone when computing dates if no timezone given.
 
-Campaign Strategy Structure:
+Campaign Strategy Structure (must be an object under "strategy" key):
 - core_concept: Main campaign theme
 - tagline: Catchy campaign slogan
 - target_audience: Detailed audience description
 - key_messages: Array of 3-5 key messages
 - tone: Brand voice (e.g., "energetic", "professional", "playful")
 - channels: Array of platforms (e.g., ["instagram", "facebook", "twitter"])
+
+Posting Calendar Structure (must be an ARRAY under "posting_calendar" key, NOT an object):
+[
+  {
+    "date": "2025-06-05",
+    "channel": "instagram",
+    "asset_ids": ["caption_1", "image_1"],
+    "caption": "Optional caption override",
+    "requires_approval": true
+  }
+]
 
 Asset Types to Generate:
 - 3-5 social media captions (type: "caption")
@@ -75,10 +86,67 @@ Asset Types to Generate:
 - 1 blog post/description (type: "blog")
 - 1 promotional flyer design (type: "flyer")
 
+CRITICAL: Each asset in asset_plan MUST use these exact field names:
+- "id": unique string identifier (required)
+- "type": one of ["caption", "image", "video_script", "blog", "flyer"] (required)
+- "prompt": the generation prompt used (required)
+- "version": integer starting at 1
+- "seed": integer or null
+- "model": string or null
+- "provider": string or null
+- "url": null (will be filled after generation)
+- "content": null (will be filled after generation)
+- "safety": { "moderation_passed": true, "issues": [] }
+- "tool_calls": array of tool call objects
+- "metadata": object
+
+WRONG field names to AVOID: "asset_type", "description", "asset_id"
+Use "type" NOT "asset_type"
+Use "id" NOT "asset_id"
+Use "prompt" NOT "description"
+
 For each asset, create appropriate tool_calls in sequence:
 1. Generation tool (llm_text or image_generate)
 2. Moderation tool
 3. Embedding tool (for alignment checking)
+
+Example complete asset structure:
+{
+  "id": "caption_1",
+  "type": "caption",
+  "prompt": "Write an Instagram caption for...",
+  "version": 1,
+  "seed": null,
+  "model": null,
+  "provider": null,
+  "url": null,
+  "content": null,
+  "safety": {
+    "moderation_passed": true,
+    "issues": []
+  },
+  "tool_calls": [
+    {
+      "tool": "llm_text",
+      "id": "caption_1_gen",
+      "input": {
+        "prompt": "Write an Instagram caption for...",
+        "model": "gemini-2.0-flash-exp",
+        "temperature": 0.6,
+        "max_tokens": 150
+      },
+      "expected_output_schema": {
+        "text": "string"
+      },
+      "retry_policy": {
+        "max_attempts": 3,
+        "backoff": "exponential"
+      },
+      "safety_checks": ["moderation_text"]
+    }
+  ],
+  "metadata": {}
+}
 
 Example tool_call structure:
 {
@@ -153,6 +221,54 @@ Generate a complete campaign manifest following all rules. Include strategy, ass
                     campaign["influencers"] = []
                 if "metadata" not in campaign:
                     campaign["metadata"] = {}
+                
+                # Normalize asset_plan items
+                print(f"[DEBUG] Normalizing {len(campaign.get('asset_plan', []))} assets...")
+                for i, asset in enumerate(campaign.get("asset_plan", [])):
+                    print(f"[DEBUG] Asset {i} before normalization: keys = {list(asset.keys())}")
+                    
+                    # Normalize asset_type -> type
+                    if "asset_type" in asset and "type" not in asset:
+                        asset["type"] = asset.pop("asset_type")
+                        print(f"[DEBUG] Asset {i}: Converted asset_type -> type = {asset['type']}")
+                    
+                    # Add required fields if missing
+                    if "id" not in asset:
+                        asset["id"] = f"asset_{i}_{str(uuid.uuid4())[:8]}"
+                        print(f"[DEBUG] Asset {i}: Generated id = {asset['id']}")
+                    
+                    if "prompt" not in asset:
+                        # Extract prompt from first tool_call if available
+                        tool_calls = asset.get("tool_calls", [])
+                        if tool_calls and len(tool_calls) > 0:
+                            first_call_input = tool_calls[0].get("input", {})
+                            asset["prompt"] = first_call_input.get("prompt", "")
+                            print(f"[DEBUG] Asset {i}: Extracted prompt from tool_calls")
+                        else:
+                            asset["prompt"] = ""
+                            print(f"[DEBUG] Asset {i}: Set empty prompt")
+                    
+                    # Normalize description -> prompt if needed
+                    if "description" in asset and not asset.get("prompt"):
+                        asset["prompt"] = asset.pop("description")
+                        print(f"[DEBUG] Asset {i}: Converted description -> prompt")
+                    
+                    # Ensure safety dict exists
+                    if "safety" not in asset:
+                        asset["safety"] = {"moderation_passed": True, "issues": []}
+                    
+                    print(f"[DEBUG] Asset {i} after normalization: keys = {list(asset.keys())}")
+                
+                # Normalize posting_calendar - ensure it's a list
+                if isinstance(campaign.get("posting_calendar"), dict):
+                    # Convert dict to list if needed
+                    calendar_dict = campaign["posting_calendar"]
+                    campaign["posting_calendar"] = []
+                    # Try to extract items from the dict
+                    if "items" in calendar_dict:
+                        campaign["posting_calendar"] = calendar_dict["items"]
+                    elif "posts" in calendar_dict:
+                        campaign["posting_calendar"] = calendar_dict["posts"]
                 
                 manifest_data["campaign_manifest"] = campaign
             
