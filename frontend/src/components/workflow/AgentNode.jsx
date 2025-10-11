@@ -1,7 +1,9 @@
 import React, { memo } from 'react';
 import { Handle, Position } from 'reactflow';
-import { Play, Loader2, CheckCircle, XCircle, Trash2 } from 'lucide-react';
+import { Play, Loader2, CheckCircle, XCircle, Trash2, RotateCw } from 'lucide-react';
 import useWorkflowStore from '../../store/workflowStore';
+import { formatAgentOutput, markdownToHtml } from '../../utils/formatOutput';
+import { agentAPI } from '../../api/agentAPI';
 
 const agentStyles = {
   strategy: {
@@ -41,17 +43,19 @@ function AgentNode({ data, id }) {
   const style = agentStyles[data.agentType] || agentStyles.strategy;
 
   const handleRun = async () => {
-    updateNode(id, { status: 'running', output: 'Processing...' });
+    updateNode(id, { status: 'running', output: '⏳ Processing...' });
     
     try {
-      // Call the agent's run function
-      if (data.onRun) {
-        const result = await data.onRun(data.input || '');
+      // Call the agent API directly using agentType
+      if (data.agentType) {
+        const result = await agentAPI.runAgent(data.agentType, data.input || '');
         updateNode(id, { 
           status: 'success', 
           output: result,
           lastRun: new Date().toISOString()
         });
+      } else {
+        throw new Error('Agent type not found');
       }
     } catch (error) {
       updateNode(id, { 
@@ -59,6 +63,13 @@ function AgentNode({ data, id }) {
         output: `Error: ${error.message}` 
       });
     }
+  };
+
+  const handleRegenerate = async () => {
+    // Clear previous output and run again
+    updateNode(id, { output: null, status: 'idle' });
+    await new Promise(resolve => setTimeout(resolve, 100));
+    handleRun();
   };
 
   const handleDelete = () => {
@@ -130,41 +141,55 @@ function AgentNode({ data, id }) {
           </div>
         )}
 
-        {/* Run Button */}
-        <button
-          onClick={handleRun}
-          disabled={data.status === 'running'}
-          className={`
-            w-full py-2 px-4 rounded-lg font-semibold text-sm
-            flex items-center justify-center gap-2 transition-all
-            ${data.status === 'running' 
-              ? 'bg-gray-300 cursor-not-allowed' 
-              : 'bg-slate-800 hover:bg-slate-700 text-white shadow-md hover:shadow-lg'
-            }
-          `}
-        >
-          {data.status === 'running' ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Running...
-            </>
-          ) : (
-            <>
-              <Play className="w-4 h-4" />
-              Run Agent
-            </>
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          <button
+            onClick={handleRun}
+            disabled={data.status === 'running'}
+            className={`
+              flex-1 py-2 px-4 rounded-lg font-semibold text-sm
+              flex items-center justify-center gap-2 transition-all
+              ${data.status === 'running' 
+                ? 'bg-gray-300 cursor-not-allowed' 
+                : 'bg-slate-800 hover:bg-slate-700 text-white shadow-md hover:shadow-lg'
+              }
+            `}
+          >
+            {data.status === 'running' ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Running...
+              </>
+            ) : (
+              <>
+                <Play className="w-4 h-4" />
+                Run
+              </>
+            )}
+          </button>
+
+          {/* Regenerate Button - only show if there's output */}
+          {data.output && data.status !== 'running' && (
+            <button
+              onClick={handleRegenerate}
+              className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all shadow-md hover:shadow-lg"
+              title="Regenerate output"
+            >
+              <RotateCw className="w-4 h-4" />
+            </button>
           )}
-        </button>
+        </div>
 
         {/* Output Area */}
         {data.output && (
           <div className="mt-3 p-3 bg-white/60 rounded-lg border border-gray-200">
             <div className="text-xs font-semibold text-gray-600 mb-1">Output:</div>
-            <div className="text-xs text-gray-700 max-h-24 overflow-y-auto whitespace-pre-wrap">
-              {typeof data.output === 'object' 
-                ? JSON.stringify(data.output, null, 2) 
-                : data.output}
-            </div>
+            <div 
+              className="text-xs text-gray-700 max-h-32 overflow-y-auto prose prose-xs"
+              dangerouslySetInnerHTML={{ 
+                __html: markdownToHtml(formatAgentOutput(data.output, data.agentType))
+              }}
+            />
           </div>
         )}
       </div>

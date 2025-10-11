@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, Save, Download, Upload, RefreshCw, Sparkles } from 'lucide-react';
+import { Play, Save, Download, Upload, RefreshCw, Sparkles, Loader2 } from 'lucide-react';
 import useWorkflowStore from '../../store/workflowStore';
 
 function WorkflowNavbar({ onRunWorkflow, isRunning }) {
@@ -115,21 +115,31 @@ function WorkflowNavbar({ onRunWorkflow, isRunning }) {
         {/* Divider */}
         <div className="w-px h-8 bg-slate-700 mx-2" />
 
-        {/* Run Workflow */}
+        {/* Run Workflow - Prominent Start Button */}
         <button
           onClick={onRunWorkflow}
           disabled={isRunning}
           className={`
-            px-6 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 
-            transition-all shadow-lg
+            px-8 py-2.5 rounded-lg font-bold text-base flex items-center gap-2 
+            transition-all shadow-lg transform hover:scale-105
             ${isRunning
-              ? 'bg-gray-600 cursor-not-allowed'
-              : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white'
+              ? 'bg-gray-600 cursor-not-allowed animate-pulse'
+              : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-blue-500/50'
             }
           `}
+          title="Execute all connected agents in sequence"
         >
-          <Play className="w-4 h-4" />
-          {isRunning ? 'Running...' : 'Run Workflow'}
+          {isRunning ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Executing...
+            </>
+          ) : (
+            <>
+              <Play className="w-5 h-5 fill-white" />
+              Start Workflow
+            </>
+          )}
         </button>
       </div>
     </nav>

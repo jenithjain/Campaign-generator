@@ -118,3 +118,71 @@
   background: #5B9DFE;
 }
 
+/* Prose/Markdown Styling for Output */
+.prose {
+  line-height: 1.5;
+}
+
+.prose h1,
+.prose h2,
+.prose h3 {
+  margin-top: 0.5rem;
+  margin-bottom: 0.25rem;
+  color: #1f2937;
+}
+
+.prose h3 {
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.prose strong {
+  font-weight: 600;
+  color: #374151;
+}
+
+.prose em {
+  font-style: italic;
+  color: #6b7280;
+}
+
+.prose ul,
+.prose ol {
+  margin: 0.25rem 0;
+  padding-left: 1rem;
+}
+
+.prose li {
+  margin: 0.125rem 0;
+}
+
+.prose p {
+  margin: 0.5rem 0;
+}
+
+.prose br {
+  display: block;
+  content: "";
+  margin: 0.25rem 0;
+}
+
+/* Custom scrollbar for output areas */
+.prose::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.prose::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 4px;
+}
+
+.prose::-webkit-scrollbar-thumb {
+  background: #9ca3af;
+  border-radius: 4px;
+}
+
+.prose::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+

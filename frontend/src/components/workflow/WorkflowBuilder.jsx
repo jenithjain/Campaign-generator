@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState, useMemo } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -12,10 +12,6 @@ import AgentNode from './AgentNode';
 import Sidebar from './Sidebar';
 import WorkflowNavbar from './WorkflowNavbar';
 import { agentAPI } from '../../api/agentAPI';
-
-const nodeTypes = {
-  agentNode: AgentNode,
-};
 
 let nodeId = 0;
 const getNodeId = () => `node_${nodeId++}`;
@@ -35,6 +31,11 @@ function WorkflowBuilderInner() {
     updateNode,
     getExecutionOrder,
   } = useWorkflowStore();
+
+  // Memoize nodeTypes to avoid React Flow warning
+  const nodeTypes = useMemo(() => ({
+    agentNode: AgentNode,
+  }), []);
 
   const onDragOver = useCallback((event) => {
     event.preventDefault();
@@ -59,11 +60,6 @@ function WorkflowBuilderInner() {
         y: event.clientY - reactFlowBounds.top,
       });
 
-      // Create agent-specific run function
-      const runFunction = async (input) => {
-        return await agentAPI.runAgent(agentData.type, input);
-      };
-
       const newNode = {
         id: getNodeId(),
         type: 'agentNode',
@@ -75,7 +71,6 @@ function WorkflowBuilderInner() {
           input: '',
           output: null,
           showInput: true,
-          onRun: runFunction,
         },
       };
 
@@ -85,62 +80,151 @@ function WorkflowBuilderInner() {
   );
 
   const runWorkflow = async () => {
-    if (nodes.length === 0) {
-      alert('Add some agents to the workflow first!');
+    // Get fresh state from store
+    const currentNodes = useWorkflowStore.getState().nodes;
+    const currentEdges = useWorkflowStore.getState().edges;
+
+    if (currentNodes.length === 0) {
+      alert('❌ Add some agents to the workflow first!');
       return;
     }
+
+    console.log('═══════════════════════════════════════════════════');
+    console.log('🚀 WORKFLOW EXECUTION STARTED');
+    console.log('═══════════════════════════════════════════════════');
 
     setIsRunning(true);
 
     try {
       const executionOrder = getExecutionOrder();
-      console.log('Execution order:', executionOrder.map(n => n.data.label));
+      
+      if (executionOrder.length === 0) {
+        throw new Error('No nodes to execute. Make sure nodes are properly connected.');
+      }
 
+      console.log(`\n📋 Execution Plan:`);
+      executionOrder.forEach((node, i) => {
+        console.log(`   ${i + 1}. ${node.data.label} (${node.id})`);
+      });
+      console.log('\n');
+
+      // Reset all nodes to idle state
+      console.log('🔄 Resetting all nodes...');
       for (const node of executionOrder) {
+        updateNode(node.id, { status: 'idle', output: null });
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Execute each node in order
+      for (let i = 0; i < executionOrder.length; i++) {
+        const node = executionOrder[i];
+        
+        console.log(`\n${'='.repeat(50)}`);
+        console.log(`▶️  STEP ${i + 1}/${executionOrder.length}: ${node.data.label}`);
+        console.log(`${'='.repeat(50)}`);
+
+        // Get fresh node data from store
+        const freshNodes = useWorkflowStore.getState().nodes;
+        const freshNode = freshNodes.find(n => n.id === node.id);
+
         // Get input from connected nodes
-        const incomingEdges = edges.filter(e => e.target === node.id);
-        let combinedInput = node.data.input || '';
+        const incomingEdges = currentEdges.filter(e => e.target === node.id);
+        let combinedInput = freshNode?.data?.input || '';
 
         if (incomingEdges.length > 0) {
+          console.log(`📥 Collecting input from ${incomingEdges.length} upstream node(s)...`);
+          
           const sourceOutputs = incomingEdges
             .map(edge => {
-              const sourceNode = nodes.find(n => n.id === edge.source);
-              return sourceNode?.data?.output || '';
+              const sourceNode = freshNodes.find(n => n.id === edge.source);
+              const output = sourceNode?.data?.output;
+              
+              if (!output) {
+                console.log(`   ⚠️  No output from ${sourceNode?.data?.label || 'unknown node'}`);
+                return '';
+              }
+
+              console.log(`   ✓ Received from ${sourceNode.data.label}`);
+              
+              // If output is an object, convert to readable string
+              if (typeof output === 'object') {
+                return JSON.stringify(output, null, 2);
+              }
+              return String(output);
             })
             .filter(Boolean);
 
           if (sourceOutputs.length > 0) {
-            combinedInput = sourceOutputs.join('\n\n') + '\n\n' + combinedInput;
+            combinedInput = sourceOutputs.join('\n\n---\n\n') + (combinedInput ? '\n\n' + combinedInput : '');
+            console.log(`   📝 Combined input length: ${combinedInput.length} characters`);
           }
+        } else {
+          console.log(`📝 Using node's own input: "${combinedInput.substring(0, 50)}${combinedInput.length > 50 ? '...' : ''}"`);
         }
 
-        // Run the node
-        updateNode(node.id, { status: 'running', output: 'Processing...' });
+        // Update node status to running
+        updateNode(node.id, { 
+          status: 'running', 
+          output: '⏳ Processing...' 
+        });
+
+        console.log(`⚙️  Executing ${node.data.label}...`);
 
         try {
-          const result = await node.data.onRun(combinedInput);
+          // Execute the agent using agentAPI directly
+          const agentType = freshNode?.data?.agentType;
+          
+          if (!agentType) {
+            throw new Error(`Node ${node.data.label} is missing agentType`);
+          }
+
+          console.log(`   Agent Type: ${agentType}`);
+          const result = await agentAPI.runAgent(agentType, combinedInput);
+          
+          console.log(`✅ ${node.data.label} completed successfully!`);
+          console.log(`   Output type: ${typeof result}`);
+          
+          // Update node with result
           updateNode(node.id, {
             status: 'success',
             output: result,
             lastRun: new Date().toISOString(),
           });
 
-          // Small delay between nodes
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Wait a bit for visual feedback and state update
+          await new Promise(resolve => setTimeout(resolve, 800));
+          
         } catch (error) {
+          console.error(`❌ ${node.data.label} FAILED!`);
+          console.error(`   Error: ${error.message}`);
+          console.error(`   Stack:`, error.stack);
+          
           updateNode(node.id, {
             status: 'error',
             output: `Error: ${error.message}`,
           });
+          
           throw error;
         }
       }
 
-      alert('Workflow completed successfully! ✨');
+      console.log(`\n${'='.repeat(50)}`);
+      console.log('✨ WORKFLOW COMPLETED SUCCESSFULLY!');
+      console.log(`${'='.repeat(50)}`);
+      console.log(`✓ Executed ${executionOrder.length} agent(s)`);
+      console.log(`✓ Time: ${new Date().toLocaleTimeString()}`);
+      
+      alert(`✨ Workflow completed successfully!\n\n• Executed ${executionOrder.length} agent(s)\n• All nodes processed in sequence\n• Check console for details`);
+      
     } catch (error) {
-      alert(`Workflow failed: ${error.message}`);
+      console.error('\n❌ WORKFLOW FAILED!');
+      console.error('Error:', error.message);
+      console.error('Stack:', error.stack);
+      alert(`❌ Workflow execution failed:\n\n${error.message}\n\nCheck the browser console (F12) for detailed logs.`);
     } finally {
       setIsRunning(false);
+      console.log('\n' + '═'.repeat(50) + '\n');
     }
   };
 
