@@ -47,26 +47,39 @@ function WorkflowBuilderInner() {
 
   // Handle file drag over for JSON import
   const onFileDragOver = useCallback((event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setIsDraggingFile(true);
-    event.dataTransfer.dropEffect = 'copy';
+    // Only handle if it's a file being dragged (not a workflow card)
+    if (event.dataTransfer.types.includes('Files')) {
+      event.preventDefault();
+      event.stopPropagation();
+      setIsDraggingFile(true);
+      event.dataTransfer.dropEffect = 'copy';
+    }
   }, []);
 
   const onFileDragLeave = useCallback((event) => {
     event.preventDefault();
     event.stopPropagation();
-    setIsDraggingFile(false);
+    
+    // Only clear if leaving the drop zone entirely
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX;
+    const y = event.clientY;
+    
+    if (x <= rect.left || x >= rect.right || y <= rect.top || y >= rect.bottom) {
+      setIsDraggingFile(false);
+    }
   }, []);
 
   // Handle file drop for JSON import
   const onFileDrop = useCallback((event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setIsDraggingFile(false);
-
+    // Check if it's a file drop (not a workflow card)
     const files = event.dataTransfer.files;
+    
     if (files && files.length > 0) {
+      event.preventDefault();
+      event.stopPropagation();
+      setIsDraggingFile(false);
+      
       const file = files[0];
       
       // Check if it's a JSON file
@@ -109,6 +122,9 @@ function WorkflowBuilderInner() {
       } else {
         alert('❌ Please drop a valid JSON workflow file.');
       }
+    } else {
+      // Not a file drop, just clear the file dragging state
+      setIsDraggingFile(false);
     }
   }, [nodes]);
 
@@ -299,7 +315,7 @@ function WorkflowBuilderInner() {
   };
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen pt-20">
       <WorkflowNavbar 
         onRunWorkflow={runWorkflow} 
         isRunning={isRunning}
@@ -307,15 +323,16 @@ function WorkflowBuilderInner() {
         reactFlowInstance={reactFlowInstance}
       />
 
-      <div 
-        className="flex flex-1 overflow-hidden"
-        onDragOver={onFileDragOver}
-        onDragLeave={onFileDragLeave}
-        onDrop={onFileDrop}
-      >
+      <div className="flex flex-1 overflow-hidden">
         <Sidebar />
 
-        <div className="flex-1 bg-slate-800 relative" ref={reactFlowWrapper}>
+        <div 
+          className="flex-1 bg-slate-800 relative" 
+          ref={reactFlowWrapper}
+          onDragOver={onFileDragOver}
+          onDragLeave={onFileDragLeave}
+          onDrop={onFileDrop}
+        >
           <ReactFlow
             nodes={nodes}
             edges={edges}

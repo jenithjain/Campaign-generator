@@ -2,6 +2,9 @@ import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:8000';
 
+// Toggle between mock and real API
+const USE_REAL_API = true;  // Set to false for mock data
+
 // Mock responses for development - uses actual user input!
 const mockAgentResponses = {
   strategy: (input) => {
@@ -337,18 +340,37 @@ function formatDate(date) {
 export const agentAPI = {
   // Run individual agent
   runAgent: async (agentType, input) => {
-    console.log(`Running ${agentType} agent with input:`, input);
+    console.log(`🚀 Running ${agentType} agent with input:`, input);
+    console.log(`📡 USE_REAL_API: ${USE_REAL_API}`);
 
-    // For now, use mock responses
-    // Later, replace with real API calls:
-    /*
-    const response = await axios.post(`${API_BASE_URL}/api/agent/run`, {
-      agent_type: agentType,
-      input: input,
-    });
-    return response.data.result;
-    */
+    // Use real API if enabled
+    if (USE_REAL_API) {
+      try {
+        console.log(`📞 Calling backend: POST ${API_BASE_URL}/api/agents/${agentType}`);
+        const response = await axios.post(`${API_BASE_URL}/api/agents/${agentType}`, {
+          input: input
+        });
+        
+        console.log(`✅ Backend response:`, response.data);
+        
+        // Backend returns { success: true, output: {...} }
+        if (response.data.success) {
+          return response.data.output;
+        } else {
+          throw new Error(response.data.error || 'Agent execution failed');
+        }
+      } catch (error) {
+        console.error(`❌ Backend API call failed for ${agentType}:`, error);
+        if (error.response) {
+          console.error('Error response:', error.response.data);
+          throw new Error(error.response.data.detail || `Failed to run ${agentType} agent`);
+        }
+        throw error;
+      }
+    }
 
+    // Fallback to mock responses
+    console.log(`🔧 Using mock response for ${agentType}`);
     if (mockAgentResponses[agentType]) {
       return await mockAgentResponses[agentType](input);
     }
