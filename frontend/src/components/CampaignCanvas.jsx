@@ -17,7 +17,7 @@ function CampaignCanvas({ campaign, onCampaignUpdate, onReset }) {
       <div className="flex items-center justify-between">
         <button
           onClick={onReset}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+          className="flex items-center gap-2 text-white/80 hover:text-white backdrop-blur-md bg-white/10 px-4 py-2 rounded-lg border border-white/20 transition-all"
         >
           <ArrowLeft className="w-5 h-5" />
           New Campaign
@@ -25,29 +25,35 @@ function CampaignCanvas({ campaign, onCampaignUpdate, onReset }) {
         <ExportButton campaignId={campaign.campaign_id} />
       </div>
 
-      {/* Strategy Section */}
-      <div className="bg-white rounded-lg shadow-lg p-6">
+      {/* Strategy Section - Glass morphism */}
+      <div 
+        className="rounded-3xl backdrop-blur-md border shadow-2xl p-6"
+        style={{
+          backgroundColor: 'rgba(173, 248, 45, 0.1)',
+          borderColor: 'rgba(173, 248, 45, 0.3)',
+        }}
+      >
         <div className="flex items-center gap-2 mb-4">
-          <Target className="w-6 h-6 text-purple-600" />
-          <h2 className="text-2xl font-bold text-gray-900">Campaign Strategy</h2>
+          <Target className="w-6 h-6" style={{ color: 'rgb(173, 248, 45)' }} />
+          <h2 className="text-2xl font-bold text-white">Campaign Strategy</h2>
         </div>
         
         <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <h3 className="font-semibold text-gray-700 mb-2">Core Concept</h3>
-            <p className="text-gray-900 text-lg">{strategy.core_concept}</p>
+            <h3 className="font-semibold text-white mb-2">Core Concept</h3>
+            <p className="text-white/90 text-lg">{strategy.core_concept}</p>
           </div>
           <div>
-            <h3 className="font-semibold text-gray-700 mb-2">Tagline</h3>
-            <p className="text-purple-600 text-lg font-semibold">{strategy.tagline}</p>
+            <h3 className="font-semibold text-white mb-2">Tagline</h3>
+            <p className="text-lg font-semibold" style={{ color: 'rgb(173, 248, 45)' }}>{strategy.tagline}</p>
           </div>
           <div>
-            <h3 className="font-semibold text-gray-700 mb-2">Target Audience</h3>
-            <p className="text-gray-900">{strategy.target_audience}</p>
+            <h3 className="font-semibold text-white mb-2">Target Audience</h3>
+            <p className="text-white/80">{strategy.target_audience}</p>
           </div>
           <div>
-            <h3 className="font-semibold text-gray-700 mb-2">Tone</h3>
-            <p className="text-gray-900 capitalize">{strategy.tone}</p>
+            <h3 className="font-semibold text-white mb-2">Tone</h3>
+            <p className="text-white/80 capitalize">{strategy.tone}</p>
           </div>
         </div>
 

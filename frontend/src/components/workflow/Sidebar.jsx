@@ -40,11 +40,11 @@ const agentTypes = [
 ];
 
 const colorClasses = {
-  green: 'border-green-400 bg-green-50 hover:bg-green-100 text-green-700',
-  blue: 'border-blue-400 bg-blue-50 hover:bg-blue-100 text-blue-700',
-  orange: 'border-orange-400 bg-orange-50 hover:bg-orange-100 text-orange-700',
-  purple: 'border-purple-400 bg-purple-50 hover:bg-purple-100 text-purple-700',
-  pink: 'border-pink-400 bg-pink-50 hover:bg-pink-100 text-pink-700',
+  green: 'border-[rgb(173,248,45)] bg-[rgba(173,248,45,0.1)] hover:bg-[rgba(173,248,45,0.2)] text-white',
+  blue: 'border-blue-400 bg-blue-400/10 hover:bg-blue-400/20 text-white',
+  orange: 'border-orange-400 bg-orange-400/10 hover:bg-orange-400/20 text-white',
+  purple: 'border-purple-400 bg-purple-400/10 hover:bg-purple-400/20 text-white',
+  pink: 'border-pink-400 bg-pink-400/10 hover:bg-pink-400/20 text-white',
 };
 
 function Sidebar() {
@@ -54,10 +54,10 @@ function Sidebar() {
   };
 
   return (
-    <aside className="w-72 bg-slate-900 text-gray-100 p-4 border-r border-slate-700 overflow-y-auto">
+    <aside className="w-72 bg-white/5 backdrop-blur-md text-white p-4 border-r border-white/10 overflow-y-auto">
       <div className="mb-6">
         <h2 className="text-lg font-bold mb-2 text-white">Agent Blocks</h2>
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-white/60">
           Drag and drop agents onto the canvas to build your workflow
         </p>
       </div>
@@ -71,9 +71,9 @@ function Sidebar() {
               draggable
               onDragStart={(e) => onDragStart(e, agent)}
               className={`
-                border-2 rounded-lg p-3 cursor-move transition-all
+                border-2 rounded-xl p-3 cursor-move transition-all backdrop-blur-sm
                 ${colorClasses[agent.color]}
-                hover:shadow-lg transform hover:scale-105
+                hover:shadow-xl transform hover:scale-105
               `}
             >
               <div className="flex items-start gap-3">
@@ -94,9 +94,9 @@ function Sidebar() {
         })}
       </div>
 
-      <div className="mt-8 p-4 bg-slate-800 rounded-lg border border-slate-700">
+      <div className="mt-8 p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
         <h3 className="text-sm font-semibold mb-2 text-white">💡 Tips</h3>
-        <ul className="text-xs text-gray-400 space-y-1">
+        <ul className="text-xs text-white/70 space-y-2">
           <li>• Connect nodes by dragging from one handle to another</li>
           <li>• Click "Run Agent" to execute individual nodes</li>
           <li>• Use "Run Workflow" to execute all connected nodes</li>

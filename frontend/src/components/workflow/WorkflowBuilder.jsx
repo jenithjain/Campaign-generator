@@ -315,7 +315,7 @@ function WorkflowBuilderInner() {
   };
 
   return (
-    <div className="flex flex-col h-screen pt-20">
+    <div className="flex flex-col h-screen pt-20 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       <WorkflowNavbar 
         onRunWorkflow={runWorkflow} 
         isRunning={isRunning}
@@ -327,7 +327,7 @@ function WorkflowBuilderInner() {
         <Sidebar />
 
         <div 
-          className="flex-1 bg-slate-800 relative" 
+          className="flex-1 bg-gradient-to-br from-gray-800/50 to-gray-900/50 relative" 
           ref={reactFlowWrapper}
           onDragOver={onFileDragOver}
           onDragLeave={onFileDragLeave}
@@ -347,34 +347,46 @@ function WorkflowBuilderInner() {
             snapToGrid
             snapGrid={[15, 15]}
           >
-            <Background color="#475569" gap={16} />
-            <Controls className="bg-slate-700 border-slate-600" />
+            <Background color="rgba(173, 248, 45, 0.1)" gap={16} />
+            <Controls className="bg-white/10 backdrop-blur-md border-white/20" />
             <MiniMap
               nodeColor={(node) => {
                 const colors = {
-                  strategy: '#4ade80',
+                  strategy: 'rgb(173, 248, 45)',
                   copywriting: '#60a5fa',
                   visual: '#fb923c',
                   research: '#a78bfa',
                   media: '#f472b6',
                 };
-                return colors[node.data.agentType] || '#64748b';
+                return colors[node.data.agentType] || 'rgb(173, 248, 45)';
               }}
-              className="bg-slate-700 border-slate-600"
-              maskColor="rgba(0, 0, 0, 0.3)"
+              className="bg-white/10 backdrop-blur-md border-white/20"
+              maskColor="rgba(0, 0, 0, 0.6)"
             />
           </ReactFlow>
 
           {/* File drop overlay */}
           {isDraggingFile && (
-            <div className="absolute inset-0 bg-blue-500/20 backdrop-blur-sm border-4 border-dashed border-blue-400 flex items-center justify-center z-50 pointer-events-none">
-              <div className="bg-slate-800/90 p-8 rounded-xl border border-blue-400 shadow-2xl">
+            <div 
+              className="absolute inset-0 backdrop-blur-sm border-4 border-dashed flex items-center justify-center z-50 pointer-events-none"
+              style={{
+                backgroundColor: 'rgba(173, 248, 45, 0.1)',
+                borderColor: 'rgb(173, 248, 45)',
+              }}
+            >
+              <div 
+                className="p-8 rounded-3xl backdrop-blur-md border shadow-2xl"
+                style={{
+                  backgroundColor: 'rgba(173, 248, 45, 0.1)',
+                  borderColor: 'rgb(173, 248, 45)',
+                }}
+              >
                 <div className="text-center">
-                  <Upload className="w-16 h-16 text-blue-400 mx-auto mb-4" />
+                  <Upload className="w-16 h-16 mx-auto mb-4" style={{ color: 'rgb(173, 248, 45)' }} />
                   <h3 className="text-2xl font-bold text-white mb-2">
                     Drop Workflow JSON Here
                   </h3>
-                  <p className="text-gray-300">
+                  <p className="text-white/80">
                     Import and load your saved workflow
                   </p>
                 </div>
@@ -387,15 +399,21 @@ function WorkflowBuilderInner() {
       {/* Empty state message */}
       {nodes.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="text-center text-gray-400 bg-slate-800/80 backdrop-blur-sm p-8 rounded-xl border border-slate-600">
+          <div 
+            className="text-center backdrop-blur-md p-8 rounded-3xl border shadow-2xl"
+            style={{
+              backgroundColor: 'rgba(173, 248, 45, 0.1)',
+              borderColor: 'rgba(173, 248, 45, 0.3)',
+            }}
+          >
             <h3 className="text-xl font-bold mb-2 text-white">
               Start Building Your Workflow
             </h3>
-            <p className="text-sm mb-4">
+            <p className="text-sm mb-4 text-white/80">
               Drag agents from the sidebar and drop them here
             </p>
-            <div className="text-xs text-gray-500 pt-4 border-t border-slate-600">
-              <Upload className="w-4 h-4 inline mr-1" />
+            <div className="text-xs text-white/60 pt-4 border-t border-white/20">
+              <Upload className="w-4 h-4 inline mr-1" style={{ color: 'rgb(173, 248, 45)' }} />
               Or drag & drop a workflow JSON file to import
             </div>
           </div>

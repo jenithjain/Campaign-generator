@@ -1,9 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 
 export default function Navbar() {
-  const location = useLocation();
-  const isHomePage = location.pathname === '/';
-
   return (
     <nav className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-fit">
       <div 
@@ -27,28 +24,6 @@ export default function Navbar() {
             >
               Home
             </Link>
-            {isHomePage && (
-              <>
-                <a 
-                  href="#features" 
-                  className="text-white/90 hover:text-white transition-colors duration-200 font-medium"
-                >
-                  Features
-                </a>
-                <a 
-                  href="#pricing" 
-                  className="text-white/90 hover:text-white transition-colors duration-200 font-medium"
-                >
-                  Pricing
-                </a>
-                <a 
-                  href="#about" 
-                  className="text-white/90 hover:text-white transition-colors duration-200 font-medium"
-                >
-                  About
-                </a>
-              </>
-            )}
           </div>
           
           {/* CTA Buttons */}

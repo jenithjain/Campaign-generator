@@ -100,10 +100,10 @@ function WorkflowNavbar({ onRunWorkflow, isRunning, reactFlowWrapper, reactFlowI
   };
 
   return (
-    <nav className="bg-slate-900 border-b border-slate-700 px-6 py-3 flex items-center justify-between">
+    <nav className="bg-white/5 backdrop-blur-md border-b border-white/10 px-6 py-3 flex items-center justify-between">
       {/* Left: Brand */}
       <div className="flex items-center gap-3">
-        <Sparkles className="w-6 h-6 text-blue-400" />
+        <Sparkles className="w-6 h-6" style={{ color: 'rgb(173, 248, 45)' }} />
         <div>
           {showNameEdit ? (
             <input
@@ -112,7 +112,8 @@ function WorkflowNavbar({ onRunWorkflow, isRunning, reactFlowWrapper, reactFlowI
               onChange={(e) => setWorkflowName(e.target.value)}
               onBlur={() => setShowNameEdit(false)}
               onKeyDown={(e) => e.key === 'Enter' && setShowNameEdit(false)}
-              className="bg-slate-800 text-white px-2 py-1 rounded border border-slate-600 focus:outline-none focus:border-blue-400"
+              className="bg-white/10 text-white px-2 py-1 rounded border border-white/20 focus:outline-none backdrop-blur-md"
+              style={{ focusBorderColor: 'rgb(173, 248, 45)' }}
               autoFocus
             />
           ) : (
@@ -123,7 +124,7 @@ function WorkflowNavbar({ onRunWorkflow, isRunning, reactFlowWrapper, reactFlowI
               {workflowName}
             </h1>
           )}
-          <p className="text-xs text-gray-400">BrandMind AI Workflow Builder</p>
+          <p className="text-xs text-white/60">BrandMind AI Workflow Builder</p>
         </div>
       </div>
 
@@ -133,7 +134,7 @@ function WorkflowNavbar({ onRunWorkflow, isRunning, reactFlowWrapper, reactFlowI
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-gray-100 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium border border-slate-600"
+          className="px-4 py-2 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white rounded-lg transition-all flex items-center gap-2 text-sm font-medium border border-white/20"
         >
           <Save className="w-4 h-4" />
           {isSaving ? 'Saved!' : 'Save'}
@@ -142,7 +143,7 @@ function WorkflowNavbar({ onRunWorkflow, isRunning, reactFlowWrapper, reactFlowI
         {/* Load */}
         <button
           onClick={handleLoad}
-          className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-gray-100 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium border border-slate-600"
+          className="px-4 py-2 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white rounded-lg transition-all flex items-center gap-2 text-sm font-medium border border-white/20"
         >
           <Upload className="w-4 h-4" />
           Load
@@ -151,7 +152,7 @@ function WorkflowNavbar({ onRunWorkflow, isRunning, reactFlowWrapper, reactFlowI
         {/* Import JSON */}
         <button
           onClick={handleImportClick}
-          className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-gray-100 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium border border-slate-600"
+          className="px-4 py-2 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white rounded-lg transition-all flex items-center gap-2 text-sm font-medium border border-white/20"
           title="Import workflow from JSON file"
         >
           <FileUp className="w-4 h-4" />
@@ -169,7 +170,7 @@ function WorkflowNavbar({ onRunWorkflow, isRunning, reactFlowWrapper, reactFlowI
         <div className="relative">
           <button
             onClick={() => setShowExportMenu(!showExportMenu)}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-gray-100 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium border border-slate-600"
+            className="px-4 py-2 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white rounded-lg transition-all flex items-center gap-2 text-sm font-medium border border-white/20"
           >
             <Download className="w-4 h-4" />
             Export
@@ -177,24 +178,24 @@ function WorkflowNavbar({ onRunWorkflow, isRunning, reactFlowWrapper, reactFlowI
 
           {/* Export dropdown menu */}
           {showExportMenu && (
-            <div className="absolute top-full mt-2 right-0 bg-slate-800 border border-slate-600 rounded-lg shadow-xl z-50 min-w-[200px]">
+            <div className="absolute top-full mt-2 right-0 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg shadow-xl z-50 min-w-[200px]">
               <button
                 onClick={handleExportPNG}
-                className="w-full px-4 py-2 text-left hover:bg-slate-700 text-gray-100 flex items-center gap-2 text-sm transition-colors rounded-t-lg"
+                className="w-full px-4 py-2 text-left hover:bg-white/20 text-white flex items-center gap-2 text-sm transition-all rounded-t-lg"
               >
                 <Image className="w-4 h-4" />
                 Export as PNG
               </button>
               <button
                 onClick={handleExportPDF}
-                className="w-full px-4 py-2 text-left hover:bg-slate-700 text-gray-100 flex items-center gap-2 text-sm transition-colors"
+                className="w-full px-4 py-2 text-left hover:bg-white/20 text-white flex items-center gap-2 text-sm transition-all"
               >
                 <FileText className="w-4 h-4" />
                 Export as PDF
               </button>
               <button
                 onClick={handleExportJSON}
-                className="w-full px-4 py-2 text-left hover:bg-slate-700 text-gray-100 flex items-center gap-2 text-sm transition-colors rounded-b-lg"
+                className="w-full px-4 py-2 text-left hover:bg-white/20 text-white flex items-center gap-2 text-sm transition-all rounded-b-lg"
               >
                 <Download className="w-4 h-4" />
                 Export as JSON
@@ -210,27 +211,30 @@ function WorkflowNavbar({ onRunWorkflow, isRunning, reactFlowWrapper, reactFlowI
               clearWorkflow();
             }
           }}
-          className="px-4 py-2 bg-slate-800 hover:bg-red-700 text-gray-100 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium border border-slate-600"
+          className="px-4 py-2 bg-white/10 backdrop-blur-md hover:bg-red-500/20 text-white rounded-lg transition-all flex items-center gap-2 text-sm font-medium border border-white/20 hover:border-red-500/50"
         >
           <RefreshCw className="w-4 h-4" />
           Clear
         </button>
 
         {/* Divider */}
-        <div className="w-px h-8 bg-slate-700 mx-2" />
+        <div className="w-px h-8 bg-white/20 mx-2" />
 
         {/* Run Workflow - Prominent Start Button */}
         <button
           onClick={onRunWorkflow}
           disabled={isRunning}
           className={`
-            px-8 py-2.5 rounded-lg font-bold text-base flex items-center gap-2 
+            px-8 py-2.5 rounded-full font-bold text-base flex items-center gap-2 
             transition-all shadow-lg transform hover:scale-105
             ${isRunning
-              ? 'bg-gray-600 cursor-not-allowed animate-pulse'
-              : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-blue-500/50'
+              ? 'bg-gray-600 cursor-not-allowed animate-pulse text-white'
+              : 'text-black'
             }
           `}
+          style={{
+            backgroundColor: isRunning ? undefined : 'rgb(173, 248, 45)',
+          }}
           title="Execute all connected agents in sequence"
         >
           {isRunning ? (
@@ -240,7 +244,7 @@ function WorkflowNavbar({ onRunWorkflow, isRunning, reactFlowWrapper, reactFlowI
             </>
           ) : (
             <>
-              <Play className="w-5 h-5 fill-white" />
+              <Play className="w-5 h-5 fill-black" />
               Start Workflow
             </>
           )}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import BriefInput from '../components/BriefInput';
 import CampaignCanvas from '../components/CampaignCanvas';
 import WorkflowBuilder from '../components/workflow/WorkflowBuilder';
+import BackgroundSpline from '../components/BackgroundSpline';
 import { Sparkles, Workflow, Zap } from 'lucide-react';
 
 function CampaignPage() {
@@ -14,72 +15,78 @@ function CampaignPage() {
     return <WorkflowBuilder />;
   }
 
-  // Simple mode - original interface
+  // Simple mode - with landing page theme
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 pt-20">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Sparkles className="w-8 h-8 text-purple-600" />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  BrandMind AI
-                </h1>
-                <p className="text-xs text-gray-500">Campaign Generator</p>
+    <div className="min-h-screen relative pt-20">
+      {/* 3D Spline Background */}
+      <BackgroundSpline />
+      
+      {/* Content */}
+      <div className="relative z-10">
+        {/* Header - Glass morphism */}
+        <header className="backdrop-blur-md bg-white/10 border-b border-white/20">
+          <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Sparkles className="w-8 h-8" style={{ color: 'rgb(173, 248, 45)' }} />
+                <div>
+                  <h1 className="text-2xl font-bold text-white">
+                    BrandMind AI
+                  </h1>
+                  <p className="text-xs text-white/70">Campaign Generator</p>
+                </div>
+              </div>
+
+              {/* Mode Toggle - Glass effect */}
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md p-1 rounded-lg border border-white/20">
+                <button
+                  onClick={() => setMode('simple')}
+                  className={`
+                    px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2
+                    ${mode === 'simple'
+                      ? 'bg-white/20 text-white shadow-lg border border-white/30'
+                      : 'text-white/70 hover:text-white hover:bg-white/10'
+                    }
+                  `}
+                >
+                  <Zap className="w-4 h-4" />
+                  Quick Mode
+                </button>
+                <button
+                  onClick={() => setMode('workflow')}
+                  className={`
+                    px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2
+                    ${mode === 'workflow'
+                      ? 'bg-white/20 text-white shadow-lg border border-white/30'
+                      : 'text-white/70 hover:text-white hover:bg-white/10'
+                    }
+                  `}
+                >
+                  <Workflow className="w-4 h-4" />
+                  Workflow Builder
+                </button>
               </div>
             </div>
-
-            {/* Mode Toggle */}
-            <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
-              <button
-                onClick={() => setMode('simple')}
-                className={`
-                  px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2
-                  ${mode === 'simple'
-                    ? 'bg-white text-purple-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                  }
-                `}
-              >
-                <Zap className="w-4 h-4" />
-                Quick Mode
-              </button>
-              <button
-                onClick={() => setMode('workflow')}
-                className={`
-                  px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2
-                  ${mode === 'workflow'
-                    ? 'bg-white text-purple-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                  }
-                `}
-              >
-                <Workflow className="w-4 h-4" />
-                Workflow Builder
-              </button>
-            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        {!campaign ? (
-          <BriefInput 
-            onCampaignGenerated={setCampaign} 
-            loading={loading}
-            setLoading={setLoading}
-          />
-        ) : (
-          <CampaignCanvas 
-            campaign={campaign} 
-            onCampaignUpdate={setCampaign}
-            onReset={() => setCampaign(null)}
-          />
-        )}
-      </main>
+        {/* Main Content */}
+        <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+          {!campaign ? (
+            <BriefInput 
+              onCampaignGenerated={setCampaign} 
+              loading={loading}
+              setLoading={setLoading}
+            />
+          ) : (
+            <CampaignCanvas 
+              campaign={campaign} 
+              onCampaignUpdate={setCampaign}
+              onReset={() => setCampaign(null)}
+            />
+          )}
+        </main>
+      </div>
     </div>
   );
 }

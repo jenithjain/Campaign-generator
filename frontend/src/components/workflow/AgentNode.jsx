@@ -7,34 +7,34 @@ import { agentAPI } from '../../api/agentAPI';
 
 const agentStyles = {
   strategy: {
-    border: 'border-green-400',
-    bg: 'bg-gradient-to-br from-green-50 to-green-100',
+    border: 'border-[rgb(173,248,45)]',
+    bg: 'bg-gradient-to-br from-[rgba(173,248,45,0.15)] to-[rgba(173,248,45,0.05)]',
     icon: '🎯',
-    glow: 'shadow-green-400/50',
+    glow: 'shadow-[0_0_20px_rgba(173,248,45,0.5)]',
   },
   copywriting: {
     border: 'border-blue-400',
-    bg: 'bg-gradient-to-br from-blue-50 to-blue-100',
+    bg: 'bg-gradient-to-br from-blue-400/15 to-blue-400/5',
     icon: '✍️',
-    glow: 'shadow-blue-400/50',
+    glow: 'shadow-[0_0_20px_rgba(96,165,250,0.5)]',
   },
   visual: {
     border: 'border-orange-400',
-    bg: 'bg-gradient-to-br from-orange-50 to-orange-100',
+    bg: 'bg-gradient-to-br from-orange-400/15 to-orange-400/5',
     icon: '🎨',
-    glow: 'shadow-orange-400/50',
+    glow: 'shadow-[0_0_20px_rgba(251,146,60,0.5)]',
   },
   research: {
     border: 'border-purple-400',
-    bg: 'bg-gradient-to-br from-purple-50 to-purple-100',
+    bg: 'bg-gradient-to-br from-purple-400/15 to-purple-400/5',
     icon: '🔍',
-    glow: 'shadow-purple-400/50',
+    glow: 'shadow-[0_0_20px_rgba(167,139,250,0.5)]',
   },
   media: {
     border: 'border-pink-400',
-    bg: 'bg-gradient-to-br from-pink-50 to-pink-100',
+    bg: 'bg-gradient-to-br from-pink-400/15 to-pink-400/5',
     icon: '📊',
-    glow: 'shadow-pink-400/50',
+    glow: 'shadow-[0_0_20px_rgba(244,114,182,0.5)]',
   },
 };
 
@@ -92,7 +92,7 @@ function AgentNode({ data, id }) {
   return (
     <div 
       className={`
-        relative rounded-xl border-2 ${style.border} ${style.bg} 
+        relative rounded-xl border-2 ${style.border} ${style.bg} backdrop-blur-md
         shadow-lg ${data.status === 'running' ? 'shadow-xl ' + style.glow : ''}
         transition-all duration-300 hover:scale-105
         min-w-[280px] max-w-[350px]
@@ -103,7 +103,8 @@ function AgentNode({ data, id }) {
         <Handle
           type="target"
           position={Position.Left}
-          className="w-3 h-3 !bg-slate-600 border-2 border-white"
+          className="w-3 h-3 border-2 border-white"
+          style={{ backgroundColor: 'rgb(173, 248, 45)' }}
         />
       )}
 
@@ -113,7 +114,7 @@ function AgentNode({ data, id }) {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <span className="text-2xl">{style.icon}</span>
-            <h3 className="font-bold text-gray-800 text-sm">
+            <h3 className="font-bold text-white text-sm">
               {data.label}
             </h3>
           </div>
@@ -121,7 +122,7 @@ function AgentNode({ data, id }) {
             {getStatusIcon()}
             <button
               onClick={handleDelete}
-              className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded hover:bg-white/50"
+              className="text-white/60 hover:text-red-400 transition-colors p-1 rounded hover:bg-white/10"
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -132,7 +133,7 @@ function AgentNode({ data, id }) {
         {data.showInput && (
           <div className="mb-3">
             <textarea
-              className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent bg-white/80 resize-none"
+              className="w-full px-3 py-2 text-xs border border-white/20 rounded-lg focus:ring-2 focus:ring-[rgb(173,248,45)] focus:border-transparent bg-white/10 backdrop-blur-sm text-white placeholder-white/50 resize-none"
               placeholder={`Enter ${data.label.toLowerCase()} instructions...`}
               rows={2}
               value={data.input || ''}
@@ -148,12 +149,15 @@ function AgentNode({ data, id }) {
             disabled={data.status === 'running'}
             className={`
               flex-1 py-2 px-4 rounded-lg font-semibold text-sm
-              flex items-center justify-center gap-2 transition-all
+              flex items-center justify-center gap-2 transition-all hover:scale-105
               ${data.status === 'running' 
-                ? 'bg-gray-300 cursor-not-allowed' 
-                : 'bg-slate-800 hover:bg-slate-700 text-white shadow-md hover:shadow-lg'
+                ? 'bg-gray-600 text-white cursor-not-allowed' 
+                : 'text-black shadow-md hover:shadow-lg'
               }
             `}
+            style={{
+              backgroundColor: data.status === 'running' ? undefined : 'rgb(173, 248, 45)',
+            }}
           >
             {data.status === 'running' ? (
               <>
@@ -172,7 +176,7 @@ function AgentNode({ data, id }) {
           {data.output && data.status !== 'running' && (
             <button
               onClick={handleRegenerate}
-              className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all shadow-md hover:shadow-lg"
+              className="px-3 py-2 bg-white/10 backdrop-blur-md hover:bg-white/20 border border-white/20 text-white rounded-lg transition-all shadow-md hover:shadow-lg hover:scale-105"
               title="Regenerate output"
             >
               <RotateCw className="w-4 h-4" />
@@ -182,8 +186,8 @@ function AgentNode({ data, id }) {
 
         {/* Output Area */}
         {data.output && (
-          <div className="mt-3 p-3 bg-white/60 rounded-lg border border-gray-200">
-            <div className="text-xs font-semibold text-gray-600 mb-1">Output:</div>
+          <div className="mt-3 p-3 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+            <div className="text-xs font-semibold text-white/80 mb-1">Output:</div>
             
             {/* Special rendering for visual agent with images */}
             {data.agentType === 'visual' && data.output.type === 'visual_with_images' ? (
@@ -195,8 +199,8 @@ function AgentNode({ data, id }) {
                       key={img.id}
                       className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
                         img.selected
-                          ? 'border-blue-500 shadow-lg'
-                          : 'border-gray-300 hover:border-blue-300'
+                          ? 'border-[rgb(173,248,45)] shadow-lg'
+                          : 'border-white/30 hover:border-[rgb(173,248,45)]'
                       }`}
                       onClick={() => {
                         // Update selected image
@@ -217,8 +221,8 @@ function AgentNode({ data, id }) {
                         className="w-full h-20 object-cover"
                       />
                       {img.selected && (
-                        <div className="absolute top-1 right-1 bg-blue-500 text-white rounded-full p-1">
-                          <CheckCircle className="w-3 h-3" />
+                        <div className="absolute top-1 right-1 rounded-full p-1" style={{ backgroundColor: 'rgb(173, 248, 45)' }}>
+                          <CheckCircle className="w-3 h-3 text-black" />
                         </div>
                       )}
                     </div>
@@ -227,7 +231,7 @@ function AgentNode({ data, id }) {
 
                 {/* Selected Image Details */}
                 {data.output.selected_image && (
-                  <div className="text-xs text-gray-700 space-y-1">
+                  <div className="text-xs text-white/80 space-y-1">
                     <div><strong>Style:</strong> {data.output.style}</div>
                     <div><strong>Colors:</strong> {data.output.color_palette?.join(', ')}</div>
                   </div>
@@ -236,7 +240,7 @@ function AgentNode({ data, id }) {
             ) : (
               /* Regular markdown output for other agents */
               <div 
-                className="text-xs text-gray-700 max-h-32 overflow-y-auto prose prose-xs"
+                className="text-xs text-white/90 max-h-32 overflow-y-auto prose prose-xs"
                 dangerouslySetInnerHTML={{ 
                   __html: markdownToHtml(formatAgentOutput(data.output, data.agentType))
                 }}
@@ -250,7 +254,8 @@ function AgentNode({ data, id }) {
       <Handle
         type="source"
         position={Position.Right}
-        className="w-3 h-3 !bg-slate-600 border-2 border-white"
+        className="w-3 h-3 border-2 border-white"
+        style={{ backgroundColor: 'rgb(173, 248, 45)' }}
       />
     </div>
   );
