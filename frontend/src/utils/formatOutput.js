@@ -88,6 +88,11 @@ function formatCopywritingOutput(data) {
 }
 
 function formatVisualOutput(data) {
+  // If this has actual images, return special format
+  if (data.type === 'visual_with_images' && data.images) {
+    return data; // Return raw data for special rendering
+  }
+  
   let md = '### 🎨 Visual Design Concepts\n\n';
   
   if (data.image_concepts && Array.isArray(data.image_concepts)) {

@@ -184,12 +184,64 @@ function AgentNode({ data, id }) {
         {data.output && (
           <div className="mt-3 p-3 bg-white/60 rounded-lg border border-gray-200">
             <div className="text-xs font-semibold text-gray-600 mb-1">Output:</div>
-            <div 
-              className="text-xs text-gray-700 max-h-32 overflow-y-auto prose prose-xs"
-              dangerouslySetInnerHTML={{ 
-                __html: markdownToHtml(formatAgentOutput(data.output, data.agentType))
-              }}
-            />
+            
+            {/* Special rendering for visual agent with images */}
+            {data.agentType === 'visual' && data.output.type === 'visual_with_images' ? (
+              <div>
+                {/* Image Gallery */}
+                <div className="grid grid-cols-3 gap-2 mb-3">
+                  {data.output.images?.map((img, idx) => (
+                    <div
+                      key={img.id}
+                      className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
+                        img.selected
+                          ? 'border-blue-500 shadow-lg'
+                          : 'border-gray-300 hover:border-blue-300'
+                      }`}
+                      onClick={() => {
+                        // Update selected image
+                        const updatedOutput = {
+                          ...data.output,
+                          images: data.output.images.map((image, i) => ({
+                            ...image,
+                            selected: i === idx,
+                          })),
+                          selected_image: data.output.images[idx],
+                        };
+                        updateNode(id, { output: updatedOutput });
+                      }}
+                    >
+                      <img
+                        src={img.url}
+                        alt={`Generated ${idx + 1}`}
+                        className="w-full h-20 object-cover"
+                      />
+                      {img.selected && (
+                        <div className="absolute top-1 right-1 bg-blue-500 text-white rounded-full p-1">
+                          <CheckCircle className="w-3 h-3" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Selected Image Details */}
+                {data.output.selected_image && (
+                  <div className="text-xs text-gray-700 space-y-1">
+                    <div><strong>Style:</strong> {data.output.style}</div>
+                    <div><strong>Colors:</strong> {data.output.color_palette?.join(', ')}</div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Regular markdown output for other agents */
+              <div 
+                className="text-xs text-gray-700 max-h-32 overflow-y-auto prose prose-xs"
+                dangerouslySetInnerHTML={{ 
+                  __html: markdownToHtml(formatAgentOutput(data.output, data.agentType))
+                }}
+              />
+            )}
           </div>
         )}
       </div>

@@ -6,6 +6,7 @@ import ReactFlow, {
   ReactFlowProvider,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
+import { Upload } from 'lucide-react';
 
 import useWorkflowStore from '../../store/workflowStore';
 import AgentNode from './AgentNode';
@@ -37,10 +38,79 @@ function WorkflowBuilderInner() {
     agentNode: AgentNode,
   }), []);
 
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
+
   const onDragOver = useCallback((event) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
   }, []);
+
+  // Handle file drag over for JSON import
+  const onFileDragOver = useCallback((event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDraggingFile(true);
+    event.dataTransfer.dropEffect = 'copy';
+  }, []);
+
+  const onFileDragLeave = useCallback((event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDraggingFile(false);
+  }, []);
+
+  // Handle file drop for JSON import
+  const onFileDrop = useCallback((event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDraggingFile(false);
+
+    const files = event.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      
+      // Check if it's a JSON file
+      if (file.type === 'application/json' || file.name.endsWith('.json')) {
+        const reader = new FileReader();
+        
+        reader.onload = (e) => {
+          try {
+            const workflowData = JSON.parse(e.target.result);
+            
+            // Validate workflow structure
+            if (workflowData.nodes && workflowData.edges) {
+              // Clear current workflow
+              if (nodes.length > 0) {
+                if (confirm('This will replace your current workflow. Continue?')) {
+                  useWorkflowStore.getState().setNodes(workflowData.nodes);
+                  useWorkflowStore.getState().setEdges(workflowData.edges);
+                  if (workflowData.name) {
+                    useWorkflowStore.getState().setWorkflowName(workflowData.name);
+                  }
+                  alert('✅ Workflow imported successfully!');
+                }
+              } else {
+                useWorkflowStore.getState().setNodes(workflowData.nodes);
+                useWorkflowStore.getState().setEdges(workflowData.edges);
+                if (workflowData.name) {
+                  useWorkflowStore.getState().setWorkflowName(workflowData.name);
+                }
+                alert('✅ Workflow imported successfully!');
+              }
+            } else {
+              alert('❌ Invalid workflow file. Missing nodes or edges.');
+            }
+          } catch (error) {
+            alert('❌ Failed to import workflow: ' + error.message);
+          }
+        };
+        
+        reader.readAsText(file);
+      } else {
+        alert('❌ Please drop a valid JSON workflow file.');
+      }
+    }
+  }, [nodes]);
 
   const onDrop = useCallback(
     (event) => {
@@ -230,12 +300,22 @@ function WorkflowBuilderInner() {
 
   return (
     <div className="flex flex-col h-screen">
-      <WorkflowNavbar onRunWorkflow={runWorkflow} isRunning={isRunning} />
+      <WorkflowNavbar 
+        onRunWorkflow={runWorkflow} 
+        isRunning={isRunning}
+        reactFlowWrapper={reactFlowWrapper}
+        reactFlowInstance={reactFlowInstance}
+      />
 
-      <div className="flex flex-1 overflow-hidden">
+      <div 
+        className="flex flex-1 overflow-hidden"
+        onDragOver={onFileDragOver}
+        onDragLeave={onFileDragLeave}
+        onDrop={onFileDrop}
+      >
         <Sidebar />
 
-        <div className="flex-1 bg-slate-800" ref={reactFlowWrapper}>
+        <div className="flex-1 bg-slate-800 relative" ref={reactFlowWrapper}>
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -267,6 +347,23 @@ function WorkflowBuilderInner() {
               maskColor="rgba(0, 0, 0, 0.3)"
             />
           </ReactFlow>
+
+          {/* File drop overlay */}
+          {isDraggingFile && (
+            <div className="absolute inset-0 bg-blue-500/20 backdrop-blur-sm border-4 border-dashed border-blue-400 flex items-center justify-center z-50 pointer-events-none">
+              <div className="bg-slate-800/90 p-8 rounded-xl border border-blue-400 shadow-2xl">
+                <div className="text-center">
+                  <Upload className="w-16 h-16 text-blue-400 mx-auto mb-4" />
+                  <h3 className="text-2xl font-bold text-white mb-2">
+                    Drop Workflow JSON Here
+                  </h3>
+                  <p className="text-gray-300">
+                    Import and load your saved workflow
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -277,9 +374,13 @@ function WorkflowBuilderInner() {
             <h3 className="text-xl font-bold mb-2 text-white">
               Start Building Your Workflow
             </h3>
-            <p className="text-sm">
+            <p className="text-sm mb-4">
               Drag agents from the sidebar and drop them here
             </p>
+            <div className="text-xs text-gray-500 pt-4 border-t border-slate-600">
+              <Upload className="w-4 h-4 inline mr-1" />
+              Or drag & drop a workflow JSON file to import
+            </div>
           </div>
         </div>
       )}

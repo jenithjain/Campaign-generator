@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
-import { Play, Save, Download, Upload, RefreshCw, Sparkles, Loader2 } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Play, Save, Download, Upload, RefreshCw, Sparkles, Loader2, Image, FileText, FileUp } from 'lucide-react';
 import useWorkflowStore from '../../store/workflowStore';
+import { exportWorkflowAsPNG, exportWorkflowAsPDF, exportWorkflowData } from '../../utils/exportWorkflow';
 
-function WorkflowNavbar({ onRunWorkflow, isRunning }) {
-  const { workflowName, setWorkflowName, saveWorkflow, loadWorkflow, clearWorkflow } = useWorkflowStore();
+function WorkflowNavbar({ onRunWorkflow, isRunning, reactFlowWrapper, reactFlowInstance }) {
+  const { workflowName, setWorkflowName, saveWorkflow, loadWorkflow, clearWorkflow, nodes, edges, setNodes, setEdges } = useWorkflowStore();
   const [isSaving, setIsSaving] = useState(false);
   const [showNameEdit, setShowNameEdit] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const fileInputRef = useRef(null);
 
   const handleSave = () => {
     setIsSaving(true);
@@ -24,21 +27,76 @@ function WorkflowNavbar({ onRunWorkflow, isRunning }) {
     }
   };
 
-  const handleExport = () => {
-    const workflow = {
-      name: workflowName,
-      nodes: useWorkflowStore.getState().nodes,
-      edges: useWorkflowStore.getState().edges,
-      exportedAt: new Date().toISOString(),
+  const handleExportJSON = () => {
+    exportWorkflowData(nodes, edges, workflowName);
+    setShowExportMenu(false);
+  };
+
+  const handleExportPNG = async () => {
+    if (reactFlowWrapper?.current) {
+      await exportWorkflowAsPNG(reactFlowWrapper.current, workflowName);
+      setShowExportMenu(false);
+    } else {
+      alert('Canvas not ready. Please try again.');
+    }
+  };
+
+  const handleExportPDF = async () => {
+    if (reactFlowWrapper?.current) {
+      await exportWorkflowAsPDF(reactFlowWrapper.current, workflowName);
+      setShowExportMenu(false);
+    } else {
+      alert('Canvas not ready. Please try again.');
+    }
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileImport = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.json')) {
+      alert('❌ Please select a valid JSON workflow file.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const workflowData = JSON.parse(e.target.result);
+        
+        if (workflowData.nodes && workflowData.edges) {
+          if (nodes.length > 0) {
+            if (confirm('This will replace your current workflow. Continue?')) {
+              setNodes(workflowData.nodes);
+              setEdges(workflowData.edges);
+              if (workflowData.name) {
+                setWorkflowName(workflowData.name);
+              }
+              alert('✅ Workflow imported successfully!');
+            }
+          } else {
+            setNodes(workflowData.nodes);
+            setEdges(workflowData.edges);
+            if (workflowData.name) {
+              setWorkflowName(workflowData.name);
+            }
+            alert('✅ Workflow imported successfully!');
+          }
+        } else {
+          alert('❌ Invalid workflow file. Missing nodes or edges.');
+        }
+      } catch (error) {
+        alert('❌ Failed to import workflow: ' + error.message);
+      }
     };
     
-    const blob = new Blob([JSON.stringify(workflow, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${workflowName.replace(/\s+/g, '-')}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    reader.readAsText(file);
+    // Reset input so same file can be selected again
+    event.target.value = '';
   };
 
   return (
@@ -90,14 +148,60 @@ function WorkflowNavbar({ onRunWorkflow, isRunning }) {
           Load
         </button>
 
-        {/* Export */}
+        {/* Import JSON */}
         <button
-          onClick={handleExport}
+          onClick={handleImportClick}
           className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-gray-100 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium border border-slate-600"
+          title="Import workflow from JSON file"
         >
-          <Download className="w-4 h-4" />
-          Export
+          <FileUp className="w-4 h-4" />
+          Import
         </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json,application/json"
+          onChange={handleFileImport}
+          className="hidden"
+        />
+
+        {/* Export */}
+        <div className="relative">
+          <button
+            onClick={() => setShowExportMenu(!showExportMenu)}
+            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-gray-100 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium border border-slate-600"
+          >
+            <Download className="w-4 h-4" />
+            Export
+          </button>
+
+          {/* Export dropdown menu */}
+          {showExportMenu && (
+            <div className="absolute top-full mt-2 right-0 bg-slate-800 border border-slate-600 rounded-lg shadow-xl z-50 min-w-[200px]">
+              <button
+                onClick={handleExportPNG}
+                className="w-full px-4 py-2 text-left hover:bg-slate-700 text-gray-100 flex items-center gap-2 text-sm transition-colors rounded-t-lg"
+              >
+                <Image className="w-4 h-4" />
+                Export as PNG
+              </button>
+              <button
+                onClick={handleExportPDF}
+                className="w-full px-4 py-2 text-left hover:bg-slate-700 text-gray-100 flex items-center gap-2 text-sm transition-colors"
+              >
+                <FileText className="w-4 h-4" />
+                Export as PDF
+              </button>
+              <button
+                onClick={handleExportJSON}
+                className="w-full px-4 py-2 text-left hover:bg-slate-700 text-gray-100 flex items-center gap-2 text-sm transition-colors rounded-b-lg"
+              >
+                <Download className="w-4 h-4" />
+                Export as JSON
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Clear */}
         <button

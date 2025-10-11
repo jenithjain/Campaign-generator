@@ -49,24 +49,54 @@ const mockAgentResponses = {
     });
   },
 
-  visual: (input) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const userInput = input || 'brand visual';
-        const theme = detectTheme(userInput);
-        resolve({
-          image_concepts: [
-            `Hero image: ${theme.style} featuring main product/service`,
-            `Lifestyle shot: Target audience using/enjoying the offering`,
-            `Detail shot: Close-up highlighting key features`,
-          ],
-          color_palette: theme.colors,
-          style: theme.description,
-          status: `Concepts ready based on: ${userInput}`,
-          context: userInput,
-        });
-      }, 2000);
-    });
+  visual: async (input) => {
+    const userInput = input || 'brand visual';
+    const keywords = extractKeywords(userInput);
+    const mainTheme = keywords.slice(0, 3).join(' ');
+    const theme = detectTheme(userInput);
+    
+    // Generate image prompts
+    const imagePrompts = [
+      `Professional marketing image: ${mainTheme}, ${theme.style}, high quality, detailed`,
+      `Hero shot: ${mainTheme} with ${theme.description}, photorealistic, studio lighting`,
+      `Product photography: ${mainTheme}, clean background, modern aesthetic`,
+    ];
+
+    // Generate actual images (using placeholder for now, will call backend)
+    const generatedImages = await Promise.all(
+      imagePrompts.map(async (prompt, index) => {
+        try {
+          // For now, use placeholder images
+          // In production, this would call your backend's image generation
+          return {
+            id: `img_${Date.now()}_${index}`,
+            prompt: prompt,
+            url: `https://placehold.co/512x512/png?text=Generating+${mainTheme.replace(/\s+/g, '+')}`,
+            thumbnail: `https://placehold.co/256x256/png?text=Image+${index + 1}`,
+            selected: index === 0, // First one selected by default
+          };
+        } catch (error) {
+          return {
+            id: `img_error_${index}`,
+            prompt: prompt,
+            url: null,
+            error: error.message,
+            selected: false,
+          };
+        }
+      })
+    );
+
+    return {
+      image_concepts: imagePrompts,
+      images: generatedImages,
+      selected_image: generatedImages[0],
+      color_palette: theme.colors,
+      style: theme.description,
+      status: `Images generated for: ${mainTheme}`,
+      context: userInput,
+      type: 'visual_with_images',
+    };
   },
 
   research: (input) => {
